@@ -3,3 +3,4 @@
 /packages/config/configs/local.php
 composer.lock
 composer.phar
+projectRepository
