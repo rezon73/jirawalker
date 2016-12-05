@@ -1,2 +1,5 @@
 /vendor/
-.idea
+.idea/
+/packages/config/configs/local.php
+composer.lock
+composer.phar
