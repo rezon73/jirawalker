@@ -43,6 +43,16 @@ class ProductionChecker
 		return $this;
 	}
 
+	public function getGitDelay() {
+		return $this->gitDelay;
+	}
+
+	public function setGitDelay($delay) {
+		$this->gitDelay = $delay;
+
+		return $this;
+	}
+
 	/**
 	 * @return string
 	 */
@@ -72,31 +82,31 @@ class ProductionChecker
 	}
 
 	private function checkoutAll() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git checkout .' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git checkout .');
 	}
 
 	private function refreshRepository() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git pull' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git pull');
 	}
 
 	private function selectProductionBranch() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git checkout ' . $this->getProductionBranchName() . PHP_EOL;
 		exec($this->getFolderSelector() . 'git checkout ' . $this->getBranchName());
 	}
 
 	private function selectBranch() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git checkout ' . $this->getBranchName() . PHP_EOL;
 		exec($this->getFolderSelector() . 'git checkout ' . $this->getBranchName());
 	}
 
 	private function attemptMergeProductionBranch() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName() . PHP_EOL;
 		exec($this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName());
 
@@ -113,19 +123,19 @@ class ProductionChecker
 	}
 
 	private function isActualProductionInBranch() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git log | grep "' . $this->getProductionBranchName() . '"' . PHP_EOL;
 		return !empty(exec($this->getFolderSelector() . 'git log | grep "' . $this->getProductionBranchName() . '"'));
 	}
 
 	private function mergeAbort() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git merge --abort' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git merge --abort');
 	}
 
 	private function mergeRollback() {
-		sleep(static::GIT_DELAY);
+		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git reset --hard HEAD^' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git reset --hard HEAD^');
 	}
