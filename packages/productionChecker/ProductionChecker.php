@@ -96,7 +96,7 @@ class ProductionChecker
 	private function selectProductionBranch() {
 		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git checkout ' . $this->getProductionBranchName() . PHP_EOL;
-		exec($this->getFolderSelector() . 'git checkout ' . $this->getBranchName());
+		exec($this->getFolderSelector() . 'git checkout ' . $this->getProductionBranchName());
 	}
 
 	private function selectBranch() {
