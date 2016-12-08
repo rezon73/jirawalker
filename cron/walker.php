@@ -21,6 +21,11 @@ $walker->push(
 $stash = new StashClient(Config::me()->get('bitbucketUrl'), Config::me()->get('login'), Config::me()->get('password'));
 $stashHttpClient = $stash->getHttpClient();
 
+$productionBranch = Config::me()->get('productionBranchNameSource')->getProductionBranchName();
+if (empty($productionBranch)) {
+	exit(0);
+}
+
 foreach ($walker as $issue) {
 	/** @var chobie\Jira\Issue $issue */
 	echo PHP_EOL . PHP_EOL . $issue->getKey() . PHP_EOL;
