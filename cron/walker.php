@@ -44,13 +44,13 @@ foreach ($walker as $issue) {
 	if ($branchIsReady) {
 		$jiraApi->editIssue(
 			$issue->getKey(),
-			Config::me()->get('needMergeProductionJiraRequest')
+			Config::me()->get('dontNeedMergeProductionJiraRequest')
 		);
 	}
 	else {
 		$jiraApi->editIssue(
 			$issue->getKey(),
-			Config::me()->get('dontNeedMergeProductionJiraRequest')
+			Config::me()->get('needMergeProductionJiraRequest')
 		);
 	}
 
