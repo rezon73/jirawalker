@@ -78,7 +78,7 @@ class ProductionChecker
 		$this->selectBranch();
 		$this->refreshRepository();
 
-		return $this->IsActualProductionInBranch() && $this->attemptMergeProductionBranch();
+		return $this->isActualProductionInBranch() && $this->attemptMergeProductionBranch();
 	}
 
 	private function checkoutAll() {
