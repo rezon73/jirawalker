@@ -21,8 +21,8 @@ $walker->push(
 $stash = new StashClient(Config::me()->get('bitbucketUrl'), Config::me()->get('login'), Config::me()->get('password'));
 $stashHttpClient = $stash->getHttpClient();
 
-$productionBranch = Config::me()->get('productionBranchNameSource')->getProductionBranchName();
-if (empty($productionBranch)) {
+$productionBranchName = Config::me()->get('productionBranchNameSource')->getProductionBranchName();
+if (empty($productionBranchName)) {
 	exit(0);
 }
 
@@ -48,7 +48,7 @@ foreach ($walker as $issue) {
 	$branchIsReady = ProductionChecker::me()
 		->setProjectRepositoryPath(Config::me()->get('projectRepositoryPath'))
 		->setBranchName($issueBranch)
-		->setProductionBranchName(Config::me()->get('productionBranchNameSource')->getProductionBranchName())
+		->setProductionBranchName($productionBranchName)
 		->run();
 
 	if ($branchIsReady) {
