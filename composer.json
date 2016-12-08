@@ -1,0 +1,20 @@
+{
+    "name": "rezon73/jirawalker",
+    "authors": [
+        {
+            "name": "k.gasparyan",
+            "email": "gasparyan.work@gmail.com"
+        }
+    ],
+    "require": {
+        "chobie/jira-api-restclient": "^2.0@dev",
+	    "atlassian/stash-client" : "1.*",
+        "gentle/bitbucket-api": "^0.8.1"
+    },
+	"autoload": {
+		"classmap": [
+			"vendor/",
+			"packages/"
+		]
+	}
+}
