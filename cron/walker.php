@@ -30,6 +30,11 @@ foreach ($walker as $issue) {
 	)->json();
 
 	if ($searchBranchResults['size'] == 0) {
+		$jiraApi->editIssue(
+			$issue->getKey(),
+			Config::me()->get('dontNeedMergeProductionJiraRequest')
+		);
+
 		continue;
 	}
 
