@@ -24,7 +24,7 @@ class ProductionChecker
 	/**
 	 * @var float
 	 */
-	private $gitDelay = 0.1;
+	private $gitDelay = 0.2;
 
 	/**
 	 * @return string
@@ -71,6 +71,9 @@ class ProductionChecker
 	}
 
 	public function run() {
+        $this->mergeRollback();
+        $this->clean();
+
 		$this->checkoutAll();
 		$this->refreshRepository();
 		$this->selectProductionBranch();
@@ -89,8 +92,21 @@ class ProductionChecker
 
 	private function refreshRepository() {
 		sleep($this->getGitDelay());
-		echo PHP_EOL . $this->getFolderSelector() . 'git pull' . PHP_EOL;
-		exec($this->getFolderSelector() . 'git pull');
+
+		echo PHP_EOL . $this->getFolderSelector() . 'git pull --ff-only' . PHP_EOL;
+		exec($this->getFolderSelector() . 'git pull --ff-only 2>&1', $out, $err);
+        $out = implode(', ', $out);
+
+		if (strpos($out, 'git prune') !== false) {
+            echo PHP_EOL . $this->getFolderSelector() . 'rm .git/gc.log' . PHP_EOL;
+            exec($this->getFolderSelector() . 'rm .git/gc.log');
+
+            echo PHP_EOL . $this->getFolderSelector() . 'git prune' . PHP_EOL;
+            exec($this->getFolderSelector() . 'git prune');
+
+            echo PHP_EOL . $this->getFolderSelector() . 'git pull --ff-only' . PHP_EOL;
+            exec($this->getFolderSelector() . 'git pull --ff-only');
+        }
 	}
 
 	private function selectProductionBranch() {
@@ -118,6 +134,7 @@ class ProductionChecker
 
 		$this->checkoutAll();
 		$this->mergeRollback();
+		$this->mergeAbort();
 
 		return true;
 	}
@@ -138,6 +155,12 @@ class ProductionChecker
 		sleep($this->getGitDelay());
 		echo PHP_EOL . $this->getFolderSelector() . 'git reset --hard HEAD^' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git reset --hard HEAD^');
+	}
+
+	private function clean() {
+		sleep($this->getGitDelay());
+		echo PHP_EOL . $this->getFolderSelector() . 'git clean -f -d' . PHP_EOL;
+		exec($this->getFolderSelector() . 'git clean -f -d');
 	}
 
 	private function __construct() {}
