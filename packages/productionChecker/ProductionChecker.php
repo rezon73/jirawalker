@@ -71,6 +71,7 @@ class ProductionChecker
 	}
 
 	public function run() {
+	    $this->removeLockFile();
         $this->mergeRollback();
         $this->clean();
 
@@ -83,6 +84,11 @@ class ProductionChecker
 
 		return $this->isActualProductionInBranch() && $this->attemptMergeProductionBranch();
 	}
+
+	private function removeLockFile() {
+        echo PHP_EOL . $this->getFolderSelector() . 'rm .git/index.lock' . PHP_EOL;
+	    @unlink($this->getFolderSelector() . 'rm .git/index.lock');
+    }
 
 	private function checkoutAll() {
 		sleep($this->getGitDelay());
