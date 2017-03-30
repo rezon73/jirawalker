@@ -103,7 +103,7 @@ class ProductionChecker
 		exec($this->getFolderSelector() . 'git pull --ff-only 2>&1', $out, $err);
         $out = implode(', ', $out);
 
-		if (strpos($out, 'git prune') !== false) {
+		if (strpos($out, '.git/gc.log') !== false) {
             echo PHP_EOL . $this->getFolderSelector() . 'rm .git/gc.log' . PHP_EOL;
             exec($this->getFolderSelector() . 'rm .git/gc.log');
 
