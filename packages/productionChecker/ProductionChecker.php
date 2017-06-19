@@ -71,6 +71,9 @@ class ProductionChecker
 	}
 
 	public function run() {
+	    $this->checkRepository();
+
+	    $this->checkoutAll();
 	    $this->removeLockFile();
         $this->mergeRollback();
         $this->clean();
@@ -85,19 +88,33 @@ class ProductionChecker
 		return $this->isActualProductionInBranch() && $this->attemptMergeProductionBranch();
 	}
 
+	private function checkRepository() {
+        echo PHP_EOL . $this->getFolderSelector() . 'git status 2>&1' . PHP_EOL;
+        exec($this->getFolderSelector() . 'git status 2>&1', $out, $err);
+        $out = implode(', ', $out);
+
+        if (strpos($out, 'index file smaller than expected') !== false) {
+            echo PHP_EOL . $this->getFolderSelector() . 'rm .git/index && git add .' . PHP_EOL;
+            exec($this->getFolderSelector() . 'rm .git/index && git add .');
+        }
+    }
+
 	private function removeLockFile() {
         echo PHP_EOL . $this->getFolderSelector() . 'rm .git/index.lock' . PHP_EOL;
-	    @unlink($this->getFolderSelector() . 'rm .git/index.lock');
+	    exec($this->getFolderSelector() . 'rm .git/index.lock');
     }
 
 	private function checkoutAll() {
 		sleep($this->getGitDelay());
+        $this->removeLockFile();
+
 		echo PHP_EOL . $this->getFolderSelector() . 'git checkout .' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git checkout .');
 	}
 
 	private function refreshRepository() {
 		sleep($this->getGitDelay());
+        $this->removeLockFile();
 
 		echo PHP_EOL . $this->getFolderSelector() . 'git pull --ff-only' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git pull --ff-only 2>&1', $out, $err);
@@ -117,19 +134,25 @@ class ProductionChecker
 
 	private function selectProductionBranch() {
 		sleep($this->getGitDelay());
-		echo PHP_EOL . $this->getFolderSelector() . 'git checkout ' . $this->getProductionBranchName() . PHP_EOL;
-		exec($this->getFolderSelector() . 'git checkout ' . $this->getProductionBranchName());
+        $this->removeLockFile();
+
+        echo PHP_EOL . $this->getFolderSelector() . 'git checkout -B ' . $this->getProductionBranchName() . PHP_EOL;
+		exec($this->getFolderSelector() . 'git checkout -B ' . $this->getProductionBranchName());
 	}
 
 	private function selectBranch() {
 		sleep($this->getGitDelay());
-		echo PHP_EOL . $this->getFolderSelector() . 'git checkout ' . $this->getBranchName() . PHP_EOL;
-		exec($this->getFolderSelector() . 'git checkout ' . $this->getBranchName());
+        $this->removeLockFile();
+
+        echo PHP_EOL . $this->getFolderSelector() . 'git checkout -B ' . $this->getBranchName() . PHP_EOL;
+		exec($this->getFolderSelector() . 'git checkout -B ' . $this->getBranchName());
 	}
 
 	private function attemptMergeProductionBranch() {
 		sleep($this->getGitDelay());
-		echo PHP_EOL . $this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName() . PHP_EOL;
+        $this->removeLockFile();
+
+        echo PHP_EOL . $this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName() . PHP_EOL;
 		exec($this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName());
 
 		if (!empty(exec($this->getFolderSelector() . 'git diff --name-only --diff-filter=U'))) {
