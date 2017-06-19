@@ -136,16 +136,16 @@ class ProductionChecker
 		sleep($this->getGitDelay());
         $this->removeLockFile();
 
-        echo PHP_EOL . $this->getFolderSelector() . 'git checkout -B ' . $this->getProductionBranchName() . PHP_EOL;
-		exec($this->getFolderSelector() . 'git checkout -B ' . $this->getProductionBranchName());
+        echo PHP_EOL . $this->getFolderSelector() . 'git checkout -B ' . $this->getProductionBranchName() . ' origin/' . $this->getProductionBranchName() . PHP_EOL;
+		exec($this->getFolderSelector() . 'git checkout -B ' . $this->getProductionBranchName() . ' origin/' . $this->getProductionBranchName());
 	}
 
 	private function selectBranch() {
 		sleep($this->getGitDelay());
         $this->removeLockFile();
 
-        echo PHP_EOL . $this->getFolderSelector() . 'git checkout -B ' . $this->getBranchName() . PHP_EOL;
-		exec($this->getFolderSelector() . 'git checkout -B ' . $this->getBranchName());
+        echo PHP_EOL . $this->getFolderSelector() . 'git checkout -B ' . $this->getBranchName() . ' origin/' . $this->getBranchName() . PHP_EOL;
+		exec($this->getFolderSelector() . 'git checkout -B ' . $this->getBranchName() . ' origin/' . $this->getBranchName());
 	}
 
 	private function attemptMergeProductionBranch() {
