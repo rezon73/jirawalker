@@ -8,6 +8,13 @@ use chobie\Jira\Issues\Walker;
 use Atlassian\Stash\StashClient;
 use Config\Config;
 use ProductionChecker\ProductionChecker;
+use TaskLocker\TaskLocker;
+
+if (TaskLocker::me()->isLocked('check.lock')) {
+    return;
+}
+
+TaskLocker::me()->lock('check.lock');
 
 $jiraApi = new Api(
 	Config::me()->get('jiraUrl'),
@@ -66,3 +73,5 @@ foreach ($walker as $issue) {
 
 	echo PHP_EOL . PHP_EOL . $issueBranch . ' ' . (bool) $branchIsReady . PHP_EOL;
 }
+
+TaskLocker::me()->unlock('check.lock');
