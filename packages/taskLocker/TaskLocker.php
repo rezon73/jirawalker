@@ -6,43 +6,37 @@ class TaskLocker
 {
     const LOCK_FILE_DIR = '/lockFiles/';
 
-    /**
-     * @var TaskLocker
-     */
-    private static $instance = null;
+    private $lockFileDescriptor;
+    private $lockFilename;
 
-    public static function me() {
-        if (is_null(static::$instance)) {
-            static::$instance = new static();
-        }
+    public function __construct($lockFilename) {
+        $this->lockFilename = dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR . $lockFilename;
 
-        return static::$instance;
+        $this->lockFileDescriptor = fopen($this->lockFilename, 'w+');
     }
 
     /**
-     * @param string $lockFilename
+     * @return bool
      */
-    public function isLocked($lockFilename) {
+    public function isLocked() {
         $this->checkLockDirExisting();
 
-        return file_exists(dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR . $lockFilename);
-    }
+        if (!flock($this->lockFileDescriptor, LOCK_EX | LOCK_NB)) {
+            echo 'Process already started' . PHP_EOL;
+            fclose($this->lockFileDescriptor);
 
-    /**
-     * @param string $lockFilename
-     */
-    public function lock($lockFilename) {
-        if (!file_exists(dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR . $lockFilename)) {
-            touch(dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR . $lockFilename);
+            return true;
         }
+
+        return false;
     }
 
-    /**
-     * @param string $lockFilename
-     */
-    public function unlock($lockFilename) {
-        if (file_exists(dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR . $lockFilename)) {
-            unlink(dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR . $lockFilename);
+    public function unlock() {
+        flock($this->lockFileDescriptor, LOCK_UN);
+        fclose($this->lockFileDescriptor);
+
+        if (file_exists($this->lockFilename)) {
+            unlink($this->lockFilename);
         }
     }
 
@@ -51,8 +45,4 @@ class TaskLocker
             mkdir(dirname(__FILE__) . TaskLocker::LOCK_FILE_DIR);
         }
     }
-
-    private function __construct() {}
-
-    private function __clone() {}
 }

@@ -1,0 +1,7 @@
+Hello, my friend.
+
+This script checks existence of actual production branch in task branches.
+Example of config: ./packages/config/global.php
+
+Add task to crontab. Example:
+* * * * * for i in {1..59}; do sleep 1; php ./cron/walker.php > ./logs.txt 2>&1; done

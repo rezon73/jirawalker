@@ -100,8 +100,10 @@ class ProductionChecker
     }
 
 	private function removeLockFile() {
-        echo PHP_EOL . $this->getFolderSelector() . 'rm .git/index.lock' . PHP_EOL;
-	    exec($this->getFolderSelector() . 'rm .git/index.lock');
+        if (file_exists(rtrim($this->getProjectRepositoryPath(), '/') . '/.git/index.lock')) {
+            echo PHP_EOL . $this->getFolderSelector() . 'rm .git/index.lock' . PHP_EOL;
+            exec($this->getFolderSelector() . 'rm .git/index.lock');
+        }
     }
 
 	private function checkoutAll() {
