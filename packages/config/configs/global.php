@@ -8,7 +8,7 @@ return [
 
 	'scanningIssueJiraQuery'     => 'status = Resolved',
 
-	'productionBranchNameSource' => new \ProductionBranchSource\SimpleProductionBranchSource(),
+	'productionBranchNameSource' => new \ProductionBranchSource\SimpleProductionBranchSource('master'),
 	'projectRepositoryPath'      => 'projectRepository/',
 
 	'needMergeProductionJiraRequest' => [
