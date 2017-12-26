@@ -11,6 +11,8 @@ return [
 	'productionBranchNameSource' => new \ProductionBranchSource\SimpleProductionBranchSource('master'),
 	'projectRepositoryPath'      => 'projectRepository/',
 
+    'pushBranchAfterMerge'       => false,
+
 	'needMergeProductionJiraRequest' => [
 		'update' => [
 			'labels' => [

@@ -2,6 +2,8 @@
 
 namespace ProductionChecker;
 
+use Config\Config;
+
 class ProductionChecker
 {
 	use FolderSelector;
@@ -85,7 +87,7 @@ class ProductionChecker
 		$this->selectBranch();
 		$this->refreshRepository();
 
-		return $this->isActualProductionInBranch() && $this->attemptMergeProductionBranch();
+		return /*$this->isActualProductionInBranch() &&*/ $this->attemptMergeProductionBranch();
 	}
 
 	private function checkRepository() {
@@ -112,6 +114,14 @@ class ProductionChecker
 
 		echo PHP_EOL . $this->getFolderSelector() . 'git checkout .' . PHP_EOL;
 		exec($this->getFolderSelector() . 'git checkout .');
+	}
+
+	private function pushBranch() {
+		sleep($this->getGitDelay());
+        $this->removeLockFile();
+
+		echo PHP_EOL . $this->getFolderSelector() . 'git push origin ' . $this->getBranchName() . PHP_EOL;
+		exec($this->getFolderSelector() . 'git push origin ' . $this->getBranchName());
 	}
 
 	private function refreshRepository() {
@@ -155,17 +165,26 @@ class ProductionChecker
         $this->removeLockFile();
 
         echo PHP_EOL . $this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName() . PHP_EOL;
-		exec($this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName());
+		exec($this->getFolderSelector() . 'git merge --no-ff  ' . $this->getProductionBranchName() . ' 2>&1', $out, $err);
+        $out = implode(', ', $out);
 
-		if (!empty(exec($this->getFolderSelector() . 'git diff --name-only --diff-filter=U'))) {
+		if (
+            strpos($out, 'Already up-to-date') === false
+		    && !empty(exec($this->getFolderSelector() . 'git diff --name-only --diff-filter=U'))
+        ) {
 			$this->mergeAbort();
 
 			return false;
 		}
 
-		$this->checkoutAll();
-		$this->mergeRollback();
-		$this->mergeAbort();
+		if (Config::me()->get('pushBranchAfterMerge')) {
+            $this->pushBranch();
+        }
+        else {
+            $this->checkoutAll();
+            $this->mergeRollback();
+            $this->mergeAbort();
+        }
 
 		return true;
 	}
