@@ -34,10 +34,10 @@ if (empty($productionBranchName)) {
 }
 
 foreach ($walker as $issue) {
-	/** @var chobie\Jira\Issue $issue */
-	echo PHP_EOL . PHP_EOL . $issue->getKey() . PHP_EOL;
+    /** @var chobie\Jira\Issue $issue */
+    echo PHP_EOL . PHP_EOL . $issue->getKey() . PHP_EOL;
 
-	$searchBranchResults = $stashHttpClient->get(
+    $searchBranchResults = $stashHttpClient->get(
 		'/rest/api/1.0/projects/PHP/repos/general/branches?orderBy=MODIFICATION&filterText=' . strtolower($issue->getKey())
 	)->json();
 
@@ -50,7 +50,28 @@ foreach ($walker as $issue) {
 		continue;
 	}
 
-	$issueBranch = $searchBranchResults['values'][0]['displayId'];
+    $issueBranch = '';
+	foreach($searchBranchResults['values'] as $branchCandidate) {
+        $searchPullRequestResults = $stashHttpClient->get(
+            '/rest/api/1.0/projects/PHP/repos/general/pull-requests?direction=outgoing&at=' . strtolower($branchCandidate['id'])
+        )->json();
+
+        if ($searchPullRequestResults['size'] == 0) {
+            continue;
+        }
+
+        $issueBranch = $branchCandidate['displayId'];
+        break;
+    }
+
+	if (empty($issueBranch)) {
+        $jiraApi->editIssue(
+            $issue->getKey(),
+            Config::me()->get('needMergeProductionJiraRequest')
+        );
+
+	    continue;
+    }
 
 	$branchIsReady = ProductionChecker::me()
 		->setProjectRepositoryPath(Config::me()->get('projectRepositoryPath'))
