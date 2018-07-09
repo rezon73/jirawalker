@@ -50,6 +50,7 @@ foreach ($walker as $issue) {
 		continue;
 	}
 
+	// search opened pull-requests for each branch
     $issueBranch = '';
 	foreach($searchBranchResults['values'] as $branchCandidate) {
         $searchPullRequestResults = $stashHttpClient->get(
@@ -64,13 +65,37 @@ foreach ($walker as $issue) {
         break;
     }
 
-	if (empty($issueBranch)) {
-        $jiraApi->editIssue(
-            $issue->getKey(),
-            Config::me()->get('needMergeProductionJiraRequest')
-        );
+    if (empty($issueBranch)) {
+        // if declined pull request only exists, developed changes are rollbacked
+	    $isExistDeclinedPullRequest = false;
 
-	    continue;
+        foreach($searchBranchResults['values'] as $branchCandidate) {
+            $searchDeclinedPullRequestResults = $stashHttpClient->get(
+                '/rest/api/1.0/projects/PHP/repos/general/pull-requests?direction=outgoing&state=DECLINED&at=' . strtolower($branchCandidate['id'])
+            )->json();
+
+            if ($searchDeclinedPullRequestResults['size'] == 0) {
+                continue;
+            }
+
+            $isExistDeclinedPullRequest = true;
+            break;
+        }
+
+        if ($isExistDeclinedPullRequest) {
+            $jiraApi->editIssue(
+                $issue->getKey(),
+                Config::me()->get('dontNeedMergeProductionJiraRequest')
+            );
+        }
+        else {
+            $jiraApi->editIssue(
+                $issue->getKey(),
+                Config::me()->get('needMergeProductionJiraRequest')
+            );
+        }
+
+        continue;
     }
 
 	$branchIsReady = ProductionChecker::me()
