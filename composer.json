@@ -8,8 +8,9 @@
     ],
     "require": {
         "chobie/jira-api-restclient": "^2.0@dev",
-	    "atlassian/stash-client" : "1.*",
-        "gentle/bitbucket-api": "^0.8.1"
+        "atlassian/stash-client" : "1.*",
+        "gentle/bitbucket-api": "^0.8.1",
+        "php": ">=7.2.0"
     },
 	"autoload": {
 		"classmap": [

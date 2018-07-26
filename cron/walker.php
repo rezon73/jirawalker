@@ -25,7 +25,7 @@ $walker->push(
 	Config::me()->get('scanningIssueJiraQuery')
 );
 
-$stash = new StashClient(Config::me()->get('bitbucketUrl'), Config::me()->get('login'), Config::me()->get('password'));
+$stash = new StashClient(Config::me()->get('stashUrl'), Config::me()->get('login'), Config::me()->get('password'));
 $stashHttpClient = $stash->getHttpClient();
 
 $productionBranchName = Config::me()->get('productionBranchNameSource')->getProductionBranchName();
@@ -33,32 +33,40 @@ if (empty($productionBranchName)) {
 	exit(0);
 }
 
+$stashRestApiUrlPrefix = '/rest/api/1.0/projects/' . Config::me()->get('stashProject') . '/repos/' . Config::me()->get('stashRepository');
+
 foreach ($walker as $issue) {
     /** @var chobie\Jira\Issue $issue */
     echo PHP_EOL . PHP_EOL . $issue->getKey() . PHP_EOL;
 
     $searchBranchResults = $stashHttpClient->get(
-		'/rest/api/1.0/projects/PHP/repos/general/branches?orderBy=MODIFICATION&filterText=' . strtolower($issue->getKey())
-	)->json();
+        $stashRestApiUrlPrefix . '/branches?orderBy=MODIFICATION&filterText=' . strtolower($issue->getKey())
+	)->json(['object' => false]);
 
 	if ($searchBranchResults['size'] == 0) {
-		$jiraApi->editIssue(
-			$issue->getKey(),
-			Config::me()->get('dontNeedMergeProductionJiraRequest')
-		);
+        /** @var IRequest $request */
+        $request = Config::me()->get('dontNeedMergeProductionRequest');
+        $request->setIssueKey($issue->getKey());
+        $request->send();
 
 		continue;
 	}
+
+	$issuePullRequests = [];
 
 	// search opened pull-requests for each branch
     $issueBranch = '';
 	foreach($searchBranchResults['values'] as $branchCandidate) {
         $searchPullRequestResults = $stashHttpClient->get(
-            '/rest/api/1.0/projects/PHP/repos/general/pull-requests?direction=outgoing&at=' . strtolower($branchCandidate['id'])
-        )->json();
+            $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=OPEN&at=' . strtolower($branchCandidate['id'])
+        )->json(['object' => false]);
 
         if ($searchPullRequestResults['size'] == 0) {
             continue;
+        }
+
+        foreach($searchPullRequestResults['values'] as $pullRequest) {
+            $issuePullRequests[] = $pullRequest;
         }
 
         $issueBranch = $branchCandidate['displayId'];
@@ -66,13 +74,13 @@ foreach ($walker as $issue) {
     }
 
     if (empty($issueBranch)) {
-        // if declined pull request only exists, developed changes are rollbacked
+        // if declined pull request only exists, developed changes are rollbacked, so you skip checking of this task
 	    $isExistDeclinedPullRequest = false;
 
         foreach($searchBranchResults['values'] as $branchCandidate) {
             $searchDeclinedPullRequestResults = $stashHttpClient->get(
-                '/rest/api/1.0/projects/PHP/repos/general/pull-requests?direction=outgoing&state=DECLINED&at=' . strtolower($branchCandidate['id'])
-            )->json();
+                $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=DECLINED&at=' . strtolower($branchCandidate['id'])
+            )->json(['object' => false]);
 
             if ($searchDeclinedPullRequestResults['size'] == 0) {
                 continue;
@@ -83,16 +91,16 @@ foreach ($walker as $issue) {
         }
 
         if ($isExistDeclinedPullRequest) {
-            $jiraApi->editIssue(
-                $issue->getKey(),
-                Config::me()->get('dontNeedMergeProductionJiraRequest')
-            );
+            /** @var IRequest $request */
+            $request = Config::me()->get('dontNeedMergeProductionRequest');
+            $request->setIssueKey($issue->getKey());
+            $request->send();
         }
         else {
-            $jiraApi->editIssue(
-                $issue->getKey(),
-                Config::me()->get('needMergeProductionJiraRequest')
-            );
+            /** @var IRequest $request */
+            $request = Config::me()->get('needMergeProductionRequest');
+            $request->setIssueKey($issue->getKey());
+            $request->send();
         }
 
         continue;
@@ -105,16 +113,21 @@ foreach ($walker as $issue) {
 		->run();
 
 	if ($branchIsReady) {
-		$jiraApi->editIssue(
-			$issue->getKey(),
-			Config::me()->get('dontNeedMergeProductionJiraRequest')
-		);
+	    /** @var IRequest $request */
+        $request = Config::me()->get('dontNeedMergeProductionRequest');
+        $request->setIssueKey($issue->getKey());
+        $request->setAdditionalData([
+            'pullRequests' => $issuePullRequests,
+        ]);
+        $request->send();
 	}
 	else {
-		$jiraApi->editIssue(
-			$issue->getKey(),
-			Config::me()->get('needMergeProductionJiraRequest')
-		);
+        $request = Config::me()->get('needMergeProductionRequest');
+        $request->setIssueKey($issue->getKey());
+        $request->setAdditionalData([
+            'pullRequests' => $issuePullRequests,
+        ]);
+        $request->send();
 	}
 
 	echo PHP_EOL . PHP_EOL . $issueBranch . ' ' . (bool) $branchIsReady . PHP_EOL;
