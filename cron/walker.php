@@ -39,8 +39,20 @@ foreach ($walker as $issue) {
     /** @var chobie\Jira\Issue $issue */
     echo PHP_EOL . PHP_EOL . $issue->getKey() . PHP_EOL;
 
+    preg_match('/([0-9]{1,})/ium', $issue->getKey(), $matches);
+    if (!isset($matches[1])) {
+        continue;
+    }
+    $issueNumber = $matches[1];
+
+    preg_match('/([a-zA-Z]{1,})/ium', $issue->getKey(), $matches);
+    if (!isset($matches[1])) {
+        continue;
+    }
+    $issuePrefix = $matches[1];
+
     $searchBranchResults = $stashHttpClient->get(
-        $stashRestApiUrlPrefix . '/branches?orderBy=MODIFICATION&filterText=' . strtolower($issue->getKey())
+        $stashRestApiUrlPrefix . '/branches?orderBy=MODIFICATION&filterText=' . $issueNumber
 	)->json(['object' => false]);
 
 	if ($searchBranchResults['size'] == 0) {
@@ -57,6 +69,10 @@ foreach ($walker as $issue) {
 	// search opened pull-requests for each branch
     $issueBranch = '';
 	foreach($searchBranchResults['values'] as $branchCandidate) {
+        if (!preg_match('/' . $issuePrefix . '*.' . $issueNumber . '[^0-9]{0,1}.*/ium', $issue->getKey())) {
+            continue;
+        }
+
         $searchPullRequestResults = $stashHttpClient->get(
             $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=OPEN&at=' . strtolower($branchCandidate['id'])
         )->json(['object' => false]);
