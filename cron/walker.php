@@ -69,7 +69,7 @@ foreach ($walker as $issue) {
 	// search opened pull-requests for each branch
     $issueBranch = '';
 	foreach($searchBranchResults['values'] as $branchCandidate) {
-        if (!preg_match('/' . $issuePrefix . '*.' . $issueNumber . '[^0-9]{0,1}.*/ium', $issue->getKey())) {
+        if (!preg_match('/' . $issuePrefix . '*.' . $issueNumber . '[^0-9]{0,1}.*/ium', $branchCandidate['displayId'])) {
             continue;
         }
 
@@ -94,6 +94,10 @@ foreach ($walker as $issue) {
 	    $isExistDeclinedPullRequest = false;
 
         foreach($searchBranchResults['values'] as $branchCandidate) {
+            if (!preg_match('/' . $issuePrefix . '*.' . $issueNumber . '[^0-9]{0,1}.*/ium', $branchCandidate['displayId'])) {
+                continue;
+            }
+
             $searchDeclinedPullRequestResults = $stashHttpClient->get(
                 $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=DECLINED&at=' . strtolower($branchCandidate['id'])
             )->json(['object' => false]);
