@@ -39,13 +39,13 @@ foreach ($walker as $issue) {
     /** @var chobie\Jira\Issue $issue */
     echo PHP_EOL . PHP_EOL . $issue->getKey() . PHP_EOL;
 
-    preg_match('/([0-9]{1,})/ium', $issue->getKey(), $matches);
+    preg_match('/-([0-9]{1,})/ium', $issue->getKey(), $matches);
     if (!isset($matches[1])) {
         continue;
     }
     $issueNumber = $matches[1];
 
-    preg_match('/([a-zA-Z]{1,})/ium', $issue->getKey(), $matches);
+    preg_match('/(.*)-/ium', $issue->getKey(), $matches);
     if (!isset($matches[1])) {
         continue;
     }
@@ -74,7 +74,7 @@ foreach ($walker as $issue) {
         }
 
         $searchPullRequestResults = $stashHttpClient->get(
-            $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=OPEN&at=' . strtolower($branchCandidate['id'])
+            $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=OPEN&at=' . $branchCandidate['id']
         )->json(['object' => false]);
 
         if ($searchPullRequestResults['size'] == 0) {
@@ -99,7 +99,7 @@ foreach ($walker as $issue) {
             }
 
             $searchDeclinedPullRequestResults = $stashHttpClient->get(
-                $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=DECLINED&at=' . strtolower($branchCandidate['id'])
+                $stashRestApiUrlPrefix . '/pull-requests?direction=outgoing&state=DECLINED&at=' . $branchCandidate['id']
             )->json(['object' => false]);
 
             if ($searchDeclinedPullRequestResults['size'] == 0) {
